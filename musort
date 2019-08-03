@@ -1,8 +1,7 @@
 #!/bin/bash
 musicDir="$HOME/Music" # path of music directory, use full path, use $HOME instead of ~
-find "$1" -name "*.mp3" -o -name "*.flac" -print0 | while read -d $'\0' file
+find "$1" \( -name "*.mp3" -o -name "*.flac" \) -print0 | while read -d $'\0' file
 do
-#for i in "$HOME/$1"*; do
 		info=$(mediainfo "$file")
 		artist=$(echo "$info" | grep "^Performer" | awk '{for(i=3;i<=NF;++i)printf $i""FS ; print ""}' | sed -e 's/[[:space:]]*$//')
 		album=$(echo "$info" | grep "^Album  " | awk '{for(i=3;i<=NF;++i)printf $i""FS ; print ""}' | sed -e 's/[[:space:]]*$//')
