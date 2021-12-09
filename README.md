@@ -3,6 +3,7 @@ shell script for sorting loose music files
 
 # Dependencies
 [mediainfo](https://mediaarea.net/en/MediaInfo)
+[EasyTAG](https://wiki.gnome.org/Apps/EasyTAG)
 
 # Configuration
 Change the *musicDir* varible in the script to the full path of the directory where you want to move the files, instead of "~" use "$HOME". `$HOME/Music` for example.
