@@ -21,8 +21,7 @@ function sort {
 	[ -z "$year" ] && year=$(mediainfo --Inform="General;%Recorded_Date%" "$file")
 	year=$(echo "$year" | grep -oE "[0-9]{4}")
 
-	[ ! -d "$musicDir/$artist" ] && [ "$opt" != "-n" ] && mkdir -pv "$musicDir/$artist"
-	[ ! -d "$musicDir/$artist/($year) $album" ] && [ "$opt" != "-n" ] && mkdir -pv "$musicDir/$artist/($year) $album"
+	[ "$opt" != "-n" ] && mkdir -pv "$musicDir/$artist/($year) $album"
 
 	filename="$(basename "$file")"
 	ext="${filename##*.}"
@@ -36,11 +35,8 @@ function sort {
 	[ -z "$opt" ] && mv -v "$file" "$musicDir/$albumArtist/($year) $album/$newFilename"
 }
 
-# if argument if regular file
-if [ -f "$1" ]; then
-	sort "$1" "$2"
-	exit
-fi
+# if argument is regular file
+[ -f "$1" ] && sort "$1" "$2" && exit
 
 file=$(find "$1" \( -name "*.mp3" -o -name "*.flac" -o -name "*.m4a" \) | head -n1)
 artist=$(mediainfo --Inform="General;%Performer%" "$file")
@@ -58,10 +54,7 @@ Year: $year\n"
 
 read -p "Are these tags ok? [y/n] " -n 1 -r
 echo
-if [[ $REPLY =~ ^[Nn]$ ]]
-then
-    easytag .
-fi
+[[ $REPLY =~ ^[Nn]$ ]] && easytag .
 
 # else, if argument is directory
 echo "-- Music files --"
