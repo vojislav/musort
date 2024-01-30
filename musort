@@ -1,8 +1,10 @@
 #!/bin/bash
-musicDir="$HOME/Music" # path of music directory, use full path, use $HOME instead of ~
+remoteHost="vojislav@lazic.xyz"
+musicDir="/home/vojislav/media/Music" # path of music directory, use full path, use $HOME instead of ~
+
 [ -z "$1" ] && echo "No directory given. Exiting." && exit 1
 
-function sort {
+function sortFile {
 	file="$1"
 	opt="$2"
 
@@ -21,7 +23,7 @@ function sort {
 	[ -z "$year" ] && year=$(mediainfo --Inform="General;%Recorded_Date%" "$file")
 	year=$(echo "$year" | grep -oE "[0-9]{4}")
 
-	[ "$opt" != "-n" ] && mkdir -pv "$musicDir/$artist/($year) $album"
+	[ "$opt" != "-n" ] && ssh -n "$remoteHost" mkdir -pv $(printf "%q" "$musicDir/$artist/($year) $album")
 
 	filename="$(basename "$file")"
 	ext="${filename##*.}"
@@ -29,14 +31,18 @@ function sort {
 	newFilename=""
 	[ "$trackNum" ] && newFilename+="$trackNum. "
 	newFilename+="$albumArtist - $title.$ext"
+	newFilename=$(echo "$newFilename" | sed 's/\//_/g')
 
-	[ "$opt" == "-c" ] && cp "$file" "$musicDir/$albumArtist/($year) $album/$newFilename"
-	[  "$opt" == "-n" ] && echo "$file -> $musicDir/$albumArtist/($year) $album/$newFilename"
-	[ -z "$opt" ] && mv -v "$file" "$musicDir/$albumArtist/($year) $album/$newFilename"
+	rsync -sP "$file" "$remoteHost:$musicDir/$albumArtist/($year) $album/$newFilename"
+	#scp "$file" "$remoteHost:'$musicDir/$albumArtist/($year) $album/$newFilename'"
+
+	#[ "$opt" == "-c" ] &&
+	#[  "$opt" == "-n" ] && echo "$file -> $musicDir/$albumArtist/($year) $album/$newFilename"
+	#[ -z "$opt" ] && mv -v "$file" "$musicDir/$albumArtist/($year) $album/$newFilename"
 }
 
 # if argument is regular file
-[ -f "$1" ] && sort "$1" "$2" && exit
+[ -f "$1" ] && sortFile "$1" "$2" && exit
 
 file=$(find "$1" \( -name "*.mp3" -o -name "*.flac" -o -name "*.m4a" \) | head -n1)
 artist=$(mediainfo --Inform="General;%Performer%" "$file")
@@ -60,7 +66,7 @@ echo
 echo "-- Music files --"
 find "$1" \( -name "*.mp3" -o -name "*.flac" -o -name "*.m4a" \) -print0 | while read -r -d $'\0' file
 do
-	sort "$file" "$2"
+	sortFile "$file" "$2"
 done
 
 echo -e "\n-- Cover art --"
@@ -69,5 +75,5 @@ do
 	filename="$(basename "$file")"
 	ext="${filename##*.}"
 	[ "$2" == "-n" ] && echo "$file -> $musicDir/$artist/($year) $album/$filename"
-	[ -z "$2" ] && mv -v "$file" "$musicDir/$artist/($year) $album/$filename"
+	[ -z "$2" ] && rsync -sP "$file" "$remoteHost:$musicDir/$artist/($year) $album/$filename"
 done
